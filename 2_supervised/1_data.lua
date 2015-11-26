@@ -193,6 +193,10 @@ for i,channel in ipairs(channels) do
    print('test data, '..channel..'-channel, min: ' .. testMin)
    print('test data, '..channel..'-channel, max: ' .. testMax)
 
+   print ' '
+   print ' '
+   
+
 
 end
 
