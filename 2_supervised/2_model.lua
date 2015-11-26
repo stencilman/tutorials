@@ -36,7 +36,6 @@ ninputs = nfeats*width*height
 nstates = {64,64,128}
 filtsize = 5
 poolsize = 2
-normkernel = image.gaussian1D(7)
 
 ----------------------------------------------------------------------
 print '==> construct model'
@@ -62,6 +61,13 @@ model:add(nn.View(nstates[2]*filtsize*filtsize))
 model:add(nn.Linear(nstates[2]*filtsize*filtsize, nstates[3]))
 model:add(nn.ReLU())
 model:add(nn.Linear(nstates[3], noutputs))
+
+-- This loss requires the outputs of the trainable model to
+-- be properly normalized log-probabilities, which can be
+-- achieved using a softmax function
+
+model:add(nn.LogSoftMax())
+
 ----------------------------------------------------------------------
 print '==> here is the model:'
 print(model)

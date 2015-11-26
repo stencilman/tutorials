@@ -69,6 +69,7 @@ print '==> loading dataset'
 -- height and width of the samples.
 
 loaded = torch.load(train_file,'ascii')
+
 trainData = {
    data = loaded.X:transpose(3,4),
    labels = loaded.y[1],

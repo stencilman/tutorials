@@ -18,12 +18,6 @@ noutputs = 10
 ----------------------------------------------------------------------
 print '==> define loss'
 
--- This loss requires the outputs of the trainable model to
--- be properly normalized log-probabilities, which can be
--- achieved using a softmax function
-
-model:add(nn.LogSoftMax())
-
 -- The loss works like the MultiMarginCriterion: it takes
 -- a vector of classes, and the index of the grountruth class
 -- as arguments.
