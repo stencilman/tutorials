@@ -19,20 +19,8 @@ require 'image'   -- for color transforms
 require 'nn'      -- provides a normalization operator
 
 ----------------------------------------------------------------------
--- parse command line arguments
-if not opt then
-   print '==> processing options'
-   cmd = torch.CmdLine()
-   cmd:text()
-   cmd:text('SVHN Dataset Preprocessing')
-   cmd:text()
-   cmd:text('Options:')
-   cmd:option('-size', 'small', 'how many samples do we load: small | full | extra')
-   cmd:option('-visualize', true, 'visualize input data and weights during training')
-   cmd:text()
-   opt = cmd:parse(arg or {})
-end
-
+-- hard coding to use only the "small" size
+-- no visualization
 ----------------------------------------------------------------------
 print '==> downloading dataset'
 
@@ -63,26 +51,11 @@ end
 if not paths.filep(test_file) then
    os.execute('wget ' .. www .. test_file)
 end
-if opt.size == 'extra' and not paths.filep(extra_file) then
-   os.execute('wget ' .. www .. extra_file)   
-end
 
 ----------------------------------------------------------------------
--- training/test size
-
-if opt.size == 'extra' then
-   print '==> using extra training data'
-   trsize = 73257 + 531131
-   tesize = 26032
-elseif opt.size == 'full' then
-   print '==> using regular, full training data'
-   trsize = 73257
-   tesize = 26032
-elseif opt.size == 'small' then
-   print '==> using reduced training data, for fast experiments'
-   trsize = 10000
-   tesize = 2000
-end
+print '==> using reduced training data, for fast experiments'
+trsize = 10000
+tesize = 2000
 
 ----------------------------------------------------------------------
 print '==> loading dataset'
@@ -102,30 +75,7 @@ trainData = {
    size = function() return trsize end
 }
 
--- If extra data is used, we load the extra file, and then
--- concatenate the two training sets.
-
--- Torch's slicing syntax can be a little bit frightening. I've
--- provided a little tutorial on this, in this same directory:
--- A_slicing.lua
-
-if opt.size == 'extra' then
-   loaded = torch.load(extra_file,'ascii')
-   trdata = torch.Tensor(trsize,3,32,32)
-   trdata[{ {1,trainData.data:size(1)} }] = trainData.data
-   trdata[{ {trainData.data:size(1)+1,-1} }] = loaded.X:transpose(3,4)
-   trlabels = torch.Tensor(trsize)
-   trlabels[{ {1,trainData.labels:size(1)} }] = trainData.labels
-   trlabels[{ {trainData.labels:size(1)+1,-1} }] = loaded.y[1]
-   trainData = {
-      data = trdata,
-      labels = trlabels,
-      size = function() return trsize end
-   }
-end
-
 -- Finally we load the test data.
-
 loaded = torch.load(test_file,'ascii')
 testData = {
    data = loaded.X:transpose(3,4),
@@ -225,27 +175,25 @@ for i,channel in ipairs(channels) do
    testMean = testData.data[{ {},i }]:mean()
    testStd = testData.data[{ {},i }]:std()
 
+   trainMin = trainData.data[{ {},i }]:min()
+   trainMax = trainData.data[{ {},i }]:max()
+
+   testMin = testData.data[{ {},i }]:min()
+   testMax = testData.data[{ {},i }]:max()
+
    print('training data, '..channel..'-channel, mean: ' .. trainMean)
    print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
 
    print('test data, '..channel..'-channel, mean: ' .. testMean)
    print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
+
+   print('training data, '..channel..'-channel, min: ' .. trainMin)
+   print('training data, '..channel..'-channel, max: ' .. trainMax)
+
+   print('test data, '..channel..'-channel, min: ' .. testMin)
+   print('test data, '..channel..'-channel, max: ' .. testMax)
+
+
 end
 
 ----------------------------------------------------------------------
-print '==> visualizing data'
-
--- Visualization is quite easy, using itorch.image().
-
-if opt.visualize then
-   if itorch then
-   first256Samples_y = trainData.data[{ {1,256},1 }]
-   first256Samples_u = trainData.data[{ {1,256},2 }]
-   first256Samples_v = trainData.data[{ {1,256},3 }]
-   itorch.image(first256Samples_y)
-   itorch.image(first256Samples_u)
-   itorch.image(first256Samples_v)
-   else
-      print("For visualization, run this script in an itorch notebook")
-   end
-end
