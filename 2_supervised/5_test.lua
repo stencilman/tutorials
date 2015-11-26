@@ -17,12 +17,6 @@ function test()
    -- local vars
    local time = sys.clock()
 
-   -- averaged param use?
-   if average then
-      cachedparams = parameters:clone()
-      parameters:copy(average)
-   end
-
    -- set model to evaluate mode (for modules that differ in training and testing, like Dropout)
    model:evaluate()
 
@@ -34,8 +28,6 @@ function test()
 
       -- get new sample
       local input = testData.data[t]
-      if opt.type == 'double' then input = input:double()
-      elseif opt.type == 'cuda' then input = input:cuda() end
       local target = testData.labels[t]
 
       -- test sample
@@ -52,17 +44,7 @@ function test()
    print(confusion)
 
    -- update log/plot
-   testLogger:add{['% mean class accuracy (test set)'] = confusion.totalValid * 100}
-   if opt.plot then
-      testLogger:style{['% mean class accuracy (test set)'] = '-'}
-      testLogger:plot()
-   end
-
-   -- averaged param use?
-   if average then
-      -- restore parameters
-      parameters:copy(cachedparams)
-   end
+   testLogger:add{['% mean class accuracy (test set)'] = confusion.totalValid * 100}   
    
    -- next iteration:
    confusion:zero()
